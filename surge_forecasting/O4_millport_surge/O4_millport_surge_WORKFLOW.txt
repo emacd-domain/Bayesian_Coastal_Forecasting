@@ -1,5 +1,4 @@
-O4_millport_surge_WORKFLOW
-this directory contains all the data and tools for attaining the surge timeseries at Millport in the Firth of Clyde.
+Contained herein are data and tools for attaining the surge timeseries at Millport in the Firth of Clyde.
 
 "O4_1_millport_1980-2023" is a directory containing the raw .txt. tide and non-tide residual data for Millport from 1980 to 2023 from the BODC. Due to data sharing restrictions this will have to be applied for and downloaded by an individual with the attained permissions and is not given in this repo.
 "O4_1_rawfilereader.m" is a matlab script that reads the raw BODC residual data, check the error code and resave the output. User must check if there are empty rows of data at the end of the BODC .txt file and remove them.
