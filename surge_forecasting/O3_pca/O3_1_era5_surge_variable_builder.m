@@ -23,7 +23,7 @@ for K=1:length(dinfo)
 end
 
 % load files and concatenate u10
-for i=40%1:length(filenames_u10)
+for i=40:length(filenames_u10)
     var = load('..\O2_era5_variables\u10_wind_at_domain_locs\'+filenames_u10(i),"-mat");
     if (i == 1)
         U = var.U10;
@@ -33,7 +33,7 @@ for i=40%1:length(filenames_u10)
 end
 
 % load files and concatenate v10
-for i=40%=1:length(filenames_v10)
+for i=1:length(filenames_v10)
     var = load('..\O2_era5_variables\v10_wind_at_domain_locs\'+filenames_v10(i),"-mat");
     if (i == 1)
         V = var.V10;
@@ -43,7 +43,7 @@ for i=40%=1:length(filenames_v10)
 end
 
 % load files and concatenate msl
-for i=40%=1:length(filenames_msl)
+for i=1:length(filenames_msl)
     var = load('..\O2_era5_variables\msl_pressure_at_domain_locs\'+filenames_mslp(i),"-mat");
     if (i == 1)
         P = var.MSL;
