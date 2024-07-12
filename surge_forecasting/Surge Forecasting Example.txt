@@ -1,0 +1,28 @@
+Contained herein are 9 directories following 9 objectives for the complete preprocessing, build, run and evaluation of both Bayesian Forecasting algorithms.
+
+O1_location_selection
+Establishing and computational domain
+
+O2_era5_variables
+Extracting drivers from era5 variable files at domain locations
+
+O3_pca
+Application of principal component analysis
+
+O4_millport_surge
+Arrangement of Millport surge timeseries
+
+O5_designmatrix
+Designmatrix construction and normalisation
+
+O6_lstm_train
+Surge forecast model training
+
+O7_abms_run
+ABMS algorithm validation 
+
+O8_abmc_visual_crossing_forecast_variables
+Extracting drivers from visual crossing weather forecasts and calculating uncertainties with respect to the training data
+
+O9_mcba_run
+MCBA algorithm validation
