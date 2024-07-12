@@ -1,7 +1,7 @@
 Contained herein are the processes for applying principal component analysis to the era5 variables arranged in O2. 
 
-O3_1_era5_surge_variable_builder.m
+O3_1_era5_grid_variable_builder.m
 Merges the era5 grid variables into a single (large) array, normalises them and applies PCA. The principal component scores, variation explained, coefficients and normalising statistics are saved. The variation explained values can be used to determine the requisite number of principal components. Here 95% variation is preserved by selecting 18 principal components.
 
-O3_2_era5_met_variable_builder.m
+O3_2_era5_local_variable_builder.m
 Extracts the local meteorological variables for the target location in the computational grid.
