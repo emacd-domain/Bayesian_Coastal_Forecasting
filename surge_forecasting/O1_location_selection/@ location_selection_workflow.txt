@@ -1,0 +1,5 @@
+Contained herein is a matlab script plot_uk.m and circle drawing function [1] for generating the computational grid used in the example. 
+
+Applying this process to  a different location will require the user to adapt this script for their purposes. The decreasing resolution from the centre of the circle is commensurate with the available computational resource to the author and may not be a constraint for other practitioners.
+ 
+[1] Chad Greene (2024). circlem (https://www.mathworks.com/matlabcentral/fileexchange/48122-circlem), MATLAB Central File Exchange. Retrieved July 12, 2024.
