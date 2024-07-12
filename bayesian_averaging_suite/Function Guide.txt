@@ -1,0 +1,15 @@
+Contained herein are the functions for Monte Carlo Bayesian Average and Adaptive Bayesian Model Selection Forecasting.
+
+Examples of their usage are shown through the surge and wind-wave applications in the adjacent directories.
+
+plots_and_metrics.py
+takes the output of a set of robust predictions and produces graphics and metrics for analysis
+
+load_save_functions.py
+reads in models for use in model selection algorithm
+
+model_selection_algorithms.py
+applies either the ABMS or MCBA algorithms to the input data
+
+posterior_evaluation_functions.py
+functions for calculating the posterior probabilities and fitting Gaussian Mixture Models
