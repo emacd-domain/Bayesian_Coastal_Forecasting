@@ -1,2 +1,7 @@
-O2_era5_variables_WORKFLOW
-this directory contains all the data and tools for extracting wind and pressure varibles from era5 reanalysis files.
+Contained herein are the scripts for extracting the mean sea level pressure and U10 and V10 wind component values from the downloaded era5 datasets. These data sets were downloaded from Copernicus [1]. For the area covering the full computational domain established in O1.
+During the project build, the environmental variables were extracted at the domain locations from ERA5 netcdf files for years 1980-2020 and were placed in the msl_pressure_at_domain_locs, u10_wind_at_domain_locs and v10_wind_at_domain_locs  directories respectively. They have been omitted here to reduce the data demands of the repository and so as not to violate any data sharing constraints.
+O2_era5_ncfileextract_pressure.m extracts the pressure values at the domain locations
+O2_era5_ncfileextract_wind.m extracts the pressure values at the domain locations
+Users will have to adjust the filenames and paths for saving their desired years and for their respective directory structures
+
+Hersbach, H., Bell, B., Berrisford, P., Biavati, G., Horányi, A., Muñoz Sabater, J., Nicolas, J., Peubey, C., Radu, R., Rozum, I., Schepers, D., Simmons, A., Soci, C., Dee, D., Thépaut, J-N. (2023): ERA5 hourly data on pressure levels from 1940 to present. Copernicus Climate Change Service (C3S) Climate Data Store (CDS), DOI: 10.24381/cds.bd0915c6 (Accessed on 24-10-2023)

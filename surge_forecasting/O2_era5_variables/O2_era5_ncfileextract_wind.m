@@ -2,13 +2,15 @@
 % on the fetch radius and retime them
 load ..\O1_location_selection\domainlocs.mat
 
+currentFolder = pwd
+
 clearvars -except domainlocs
 
 %load pointlatlon
 windlon=domainlocs(:,1);
 windlat=domainlocs(:,2);
 
-cd I:\CivilEng\Personal\dsb14145
+cd I:\
 filenames=[];
 dinfo = dir('era-5_wind_1980-2020\*.nc');
 for K=1:length(dinfo)
@@ -21,7 +23,7 @@ V10=[];
 DT=[];
 
 for j=41:length(filenames)
-    cd I:\CivilEng\Personal\dsb14145\era-5_wind_1980-2020
+    cd I:\era-5_wind_1980-2020
     tic
     j
 
@@ -62,10 +64,12 @@ end
     V10=timetable(dtime,v10ord);
     V10=retime(V10,'hourly');
     
-    cd C:\Users\alphonse\Desktop\forecast_surge_metabuild\O2_era5_variables\u10_wind_at_domain_locs
+    cd (currentFolder)
+    cd O2_era5_variables\u10_wind_at_domain_locs
     save("u10_"+string(1979+j)+".mat","U10");
 
-    cd C:\Users\alphonse\Desktop\forecast_surge_metabuild\O2_era5_variables\v10_wind_at_domain_locs
+    cd (currentFolder)
+    cd O2_era5_variables\v10_wind_at_domain_locs
     save("v10_"+string(1979+j)+".mat","V10");
 
     clearvars -except filenames domainlocs windlon windlat eralon eralat j
