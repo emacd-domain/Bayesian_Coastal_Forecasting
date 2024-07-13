@@ -1,0 +1,4 @@
+Contained herein are the processes for applying the ABMS method to the designmatrix test data, using the network set generated in O6
+
+runfile_abms.py
+calls the design matrix from O5 and the model set generated in O6 and applies the ABMS model selection algorithm.
