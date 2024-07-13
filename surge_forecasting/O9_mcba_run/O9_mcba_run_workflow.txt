@@ -1,0 +1,4 @@
+Contained herein are the processes for applying the MCBA method to the VC forecast data collected, pre-processed, assembled and normalised in O9, using the network set generated in O6
+
+runfile_abms.py
+calls the forecast design matrix from O8 and the model set generated in O6 and applies the ABMS model selection algorithm.
