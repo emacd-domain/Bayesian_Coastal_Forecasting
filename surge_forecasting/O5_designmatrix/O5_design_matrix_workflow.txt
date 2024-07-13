@@ -1,0 +1,4 @@
+Contained herein is the process for building and normalising the design matrix for surge forecast model training and ABMS testing
+
+O5_1_build_design_matrix.m
+Pulls the principal component, local variables and surge residual timeseries from O3 and O4 and constructs 3D normalised design matrix with dimensions [observations, time, features] with normalising feature statistics
