@@ -1,4 +1,7 @@
 Contained herein is the process for building and normalising the design matrix for surge forecast model training and ABMS testing
 
+To reduce the size of the repository the design matrix for era5 data used for model training (1980 to 2019) has not been included, instead a reduced design matrix is provided here. 
+The full design matrix can be provided upon request.
+
 O5_1_build_design_matrix.m
 Pulls the principal component, local variables and surge residual timeseries from O3 and O4 and constructs 3D normalised design matrix with dimensions [observations, time, features] with normalising feature statistics
