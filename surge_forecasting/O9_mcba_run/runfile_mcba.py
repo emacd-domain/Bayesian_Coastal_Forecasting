@@ -29,10 +29,10 @@ NNSdirectory = cwd + r'\..\O6_lstm_train\surge_models'
 dm_means = scipy.io.loadmat("..\O5_designmatrix\dm_mean.mat")['dm_mean']
 dm_stdevs = scipy.io.loadmat("..\O5_designmatrix\dm_std.mat")['dm_std']
 
-dm_2020 = scipy.io.loadmat("..\O8_abmc_visual_crossing_forecast_variables\dm_abmc_2020.mat")['dm_abmc_2020']
-dm_2021 = scipy.io.loadmat("..\O8_abmc_visual_crossing_forecast_variables\dm_abmc_2021.mat")['dm_abmc_2021']
-dm_2022 = scipy.io.loadmat("..\O8_abmc_visual_crossing_forecast_variables\dm_abmc_2022.mat")['dm_abmc_2022']
-dm_2023 = scipy.io.loadmat("..\O8_abmc_visual_crossing_forecast_variables\dm_abmc_2023.mat")['dm_abmc_2023']
+dm_2020 = scipy.io.loadmat("..\O8_mcba_visual_crossing_forecast_variables\dm_abmc_2020.mat")['dm_abmc_2020']
+dm_2021 = scipy.io.loadmat("..\O8_mcba_visual_crossing_forecast_variables\dm_abmc_2021.mat")['dm_abmc_2021']
+dm_2022 = scipy.io.loadmat("..\O8_mcba_visual_crossing_forecast_variables\dm_abmc_2022.mat")['dm_abmc_2022']
+dm_2023 = scipy.io.loadmat("..\O8_mcba_visual_crossing_forecast_variables\dm_abmc_2023.mat")['dm_abmc_2023']
 
 # split test and abms
 norm_dm=np.concatenate([dm_2020], axis=0)
@@ -82,12 +82,12 @@ v10_error_means = scipy.io.loadmat(r"..\O8_abmc_visual_crossing_forecast_variabl
 v10_error_thresholds = scipy.io.loadmat(r"..\O8_abmc_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\v10_binned_error_thresholds.mat")['v10_binned_error_thresholds']
 
 # concatenate errors and thresholds
-bin_error_stdevs = 1.5*np.concatenate([pc_error_stds, mslp_error_stds.T, u10_error_stds.T, v10_error_stds.T], axis=1)
+bin_error_stdevs = np.concatenate([pc_error_stds, mslp_error_stds.T, u10_error_stds.T, v10_error_stds.T], axis=1)
 bin_error_means = np.concatenate([pc_error_means, mslp_error_means.T, u10_error_means.T, v10_error_means.T], axis=1)
 bin_thresholds = np.concatenate([pc_error_thresholds, mslp_error_thresholds.T, u10_error_thresholds.T, v10_error_thresholds.T], axis=1)
 
 test_vc = np.concatenate([dm_2021, dm_2022, dm_2023], axis=0)
-algorithm ='ABMC'
+algorithm ='MCBA'
 
 # assign test targets and test features
 targets_test = test_vc[:,-1,25:].copy()
@@ -106,32 +106,6 @@ test[:] = np.nan
 
 step = 1000
 
-# idx_2 = np.sum(np.isnan(features_test), axis=(1,2)) + np.sum(np.isnan(targets_test), axis=1)
-# idx_2 = np.where(idx_2 == 0)[0]
-# import time
-# tic = time.time()
-
-# rp, t = msa(
-#               msa=algorithm, 
-#               NNSdirectory=NNSdirectory,
-#               models=mod_list,
-#               workingdirectory=cwd,
-#               features=np.expand_dims(features_test[idx_2[0],:,:], 0),
-#               means=dm_means,
-#               stdevs=dm_stdevs,
-#               alpha=1.96,
-#               lead_time=24,
-#               post_distro=GMList,
-#               post_data=None,
-#               estimation_strategy='GaussianMixture',
-#               posterior_variable_list=['Target'],
-#               targets=np.expand_dims(targets_test[idx_2[0],:], 0),
-#               normalised=False,
-#               mc_samples=1000, 
-#               feature_error_standevs=bin_error_stdevs,
-#               feature_error_means=bin_error_means,
-#               feature_error_bins=bin_thresholds
-#             )
 
 # toc = time.time()
 # elapsed_time = round(toc - tic)

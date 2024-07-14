@@ -1,4 +1,22 @@
-Contained herein are the processes for applying the MCBA method to the VC forecast data collected, pre-processed, assembled and normalised in O9, using the network set generated in O6
+Contained herein are the processes for gathering VC forecast data, processing it to the model input format and conducting uncertainty quantification.
 
-runfile_abms.py
-calls the forecast design matrix from O8 and the model set generated in O6 and applies the ABMS model selection algorithm.
+O8_1_visual_crossing_api_surge_variable_request.m
+Downloads the visual crossing 24 hour forecasts at grid locations using Visual Crossing weather API 
+
+O8_2_1_visual_crossing_grid_variable_sorter.m
+Arranges the grid forecasts into array format
+
+O8_2_2_visual_crossing_local_variable_sorter.m
+Arranges the local forecasts into array format
+
+O8_3_apply_pc_coefficients.m
+Applies the principal component coefficients and feature statistics to the grid forecasts to convert them to the same principal component domain as the models
+
+O8_4_1_calculate_pc_errors.m
+Adjusts bias and calculates the mean and standard deviation of the principal component feature errors between VC and ERA5 data for the year 2020
+
+O8_4_2_calculate_local_errors.m
+Adjusts bias and calculates the mean and standard deviation of the local feature errors between VC and ERA5 data for the year 2020
+
+O8_5_prepare_vc_mcba_designmatrix.m
+Pulls the bias corrected principal components, local variables and surge residual timeseries from O8 and O4 and constructs a forecast design matrix
