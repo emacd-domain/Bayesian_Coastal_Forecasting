@@ -9,7 +9,7 @@ Extracting drivers from era5 variable files at domain locations
 O3_pca
 Application of principal component analysis
 
-O4_millport_surge
+O4_irvine_wave
 Arrangement of Millport surge timeseries
 
 O5_designmatrix
