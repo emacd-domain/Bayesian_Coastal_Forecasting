@@ -6,7 +6,7 @@ __author__ = "EM"
 model_selection_algorithms.py contains the model selection algorithms for 
 the Bayesian Coastal Forecasting process.
 
-Primary function is msa (model selection algorithm) 
+Primary function is BMF (Bayesian Model Forecast) 
 
 INPUTS:
 
@@ -61,7 +61,7 @@ OUTPUTS:
     
     robust_prediction = (lower bound, averaged prediction, upper bound)
     
-msa uses dependent sub-processses:
+BMF uses sub-processses:
     
     initialise_evaluation_arrays
     make_robust_predictions
@@ -86,7 +86,7 @@ from load_save_functions import load_models
 from posterior_evaluation_functions import posterior_evaluation
 
 
-def msa(
+def BMF(
         msa=None,
         streamlined=False,
         NNSdirectory=None,
@@ -190,79 +190,106 @@ def msa(
     #elif len(lead_time) > 1:
     #    print('\nPlease provide a single lead time')
 
-    # set abms estimation strategy
-    if estimation_strategy is None:
-        print("\n No estimation strategy provided, interpolation is assumed")
-        sleep(0.5)
-        estimation_strategy = 'interpolate'
-
-    # check whether distribution is provided for abms or
-    if post_distro is not None and post_data is None:
+    # Check Inference Model or Data Provided
+    if (post_distro is not None) & (post_data is None) & (streamlined == False):
         GMList = post_distro
         print(f"\n{len(GMList[0])} posterior distributions provided")
         for i in range (0, len(GMList[0]), 1):
             print(f'distribution {i+1}: {GMList[0][i][0]}')
-    elif post_distro is None and post_data is None:
+    elif (post_distro is not None) & (post_data is None) & (streamlined == True):
+        GMList = post_distro
+    elif (post_distro is None) & (post_data is None) & (streamlined == False):
         print("\nPlease provide model selection distribution or data to construct model selection distribution")
         sleep(0.5)
         sys.exit()
-    elif post_distro is not None and post_data is not None:
+    elif (post_distro is None) & (post_data is None) & (streamlined == True):
+        sys.exit()
+    elif (post_distro is not None) & (post_data is not None) & (streamlined == False):
         print("Both model selection distribution and data provided, \n abms method will use selection distribution")
         sleep(0.5)
         post_data = None
         GMList = post_distro
-    elif post_distro is None and post_data is not None:
+    elif (post_distro is not None) & (post_data is not None) & (streamlined == True):
+        post_data = None
+        GMList = post_distro
+    elif (post_distro is None) & (post_data is not None) & (streamlined == False):
         print(f"found likelihood evaluation data with feature dimensions {post_data[0].shape} and target dimensions {post_data[1].shape}")
         sleep(0.5)
 
-    # set n_samples if abmc is selected and mc_samples is undefined
-    if (mc_samples is None) & (msa == 'ABMC'):
+    # Posterior Inference Strategy
+    if (estimation_strategy is None) & (post_data is not None) & (post_distro is None) & (streamlined == False):
+        print("\n No estimation strategy provided, interpolation is assumed")
+        sleep(0.5)
+        estimation_strategy = 'interpolate'
+    elif (estimation_strategy is None) & (post_data is not None) & (post_distro is None) & (streamlined == True):
+        estimation_strategy = 'interpolate'
+    elif (estimation_strategy is None) & (post_data is None) & (post_distro is not None) & (streamlined == False):
+        print("\n No estimation strategy provided, Gaussian Mixture is assumed is assumed")
+        sleep(0.5)
+        estimation_strategy = 'GaussianMixture'
+    elif (estimation_strategy is None) & (post_data is None) & (post_distro is not None) & (streamlined == True):
+        estimation_strategy = 'GaussianMixture'
+    elif (estimation_strategy is not None) & (streamlined == False):
+        print(f"\n {estimation_strategy} strategy selected")
+        sleep(0.5)
+
+    # check mc_samples
+    if (mc_samples is None) & (msa == 'MCBA') & (streamlined == False):
         mc_samples = 25
         print(f"\nmc_samples not defined, setting default value {mc_samples}")
         sleep(0.5)
-    elif (mc_samples is not None) & (msa == 'ABMC'):
+    elif (mc_samples is not None) & (msa == 'MCBA') & (streamlined == False):
         print(f"\nmc_samples set at {mc_samples}")
         sleep(0.5)
+    elif (mc_samples is None) & (msa == 'MCBA') & (streamlined == True):
+        mc_samples = 25
         
-    if (feature_error_standevs is None) & (msa == 'ABMC'):
+    # check error means
+    if (feature_error_means is None) & (msa == 'MCBA') & (streamlined == False):
+        print("\nPlease provide feature error means or select ABMS if none are available")
+        sleep(0.5)
+        sys.exit()
+    elif (feature_error_means is None) & (msa == 'MCBA') & (streamlined == True):
+        sys.exit()
+    elif (feature_error_means is not None) & (msa == 'MCBA') & (streamlined == False):
+        print(f"found feature error means with dimensions {feature_error_means.shape}")
+        sleep(0.5)
+        
+    # check error standard deviations
+    if (feature_error_standevs is None) & (msa == 'MCBA') & (streamlined == False):
         print("\nPlease provide feature error standard deviations or select ABMS if none are available")
         sleep(0.5)
         sys.exit()
-    elif (feature_error_standevs is not None) & (msa == 'ABMC'):
+    elif (feature_error_standevs is None) & (msa == 'MCBA') & (streamlined == True):
+        sys.exit()
+    elif (feature_error_standevs is not None) & (msa == 'MCBA') & (streamlined == False):
         print(f"found feature error standard deviations with dimensions {feature_error_standevs.shape}")
         sleep(0.5)
-        
-    if (feature_error_bins is None) & (msa == 'ABMC'):
-        print("\nPlease provide feature error standard deviation bins for error standard deviations or select ABMS if none are available")
+    
+    # check error percentile bins
+    if (feature_error_bins is None) & (msa == 'MCBA') & (streamlined == False):
+        print("\nPlease provide feature error percentile bins or select ABMS if none are available")
         sleep(0.5)
         sys.exit()
-    elif (feature_error_bins is not None) & (msa == 'ABMC'):
-        print(f"found feature error standard deviation bins with dimensions {feature_error_bins.shape}")
+    elif (feature_error_bins is None) & (msa == 'MCBA') & (streamlined == True):
+        sys.exit()
+    elif (feature_error_bins is not None) & (msa == 'MCBA') & (streamlined == False):
+        print(f"found feature error percentile bins with dimensions {feature_error_bins.shape}")
         sleep(0.5)
     
-    if (models is None) & (NNSdirectory is not None):
-        # load models
-        print("model directory provided")
-        sleep(0.5)
-        mod_list = load_models(NNSdirectory)
-    elif (models is not None):
-        print(f"model list provided containing {len(models)} models")
-        mod_list = models.copy()
-        del models
-        sleep(0.5)
-    elif (models is None) & (NNSdirectory is None): 
-        print("PLease provide either model list or model directory")
-
+    # enable posterior inference strategy
     if post_distro is None:
-        GMList, PosteriorSamples, PosteriorVariables = posterior_evaluation(post_data=post_data, posterior_variable_list=posterior_variable_list, lead_time=lead_time, mod_list=mod_list, estimation_strategy=estimation_strategy)
+        GMList, PosteriorSamples, PosteriorVariables = posterior_evaluation(streamlined=streamlined, post_data=post_data, posterior_variable_list=posterior_variable_list, lead_time=lead_time, mod_list=mod_list, estimation_strategy=estimation_strategy)
     else:
         PosteriorSamples = []
         PosteriorVariables=[]
-        
+    
+    # initialise arrays
     prediction_loop_vars = initialise_evaluation_arrays(features, mod_list)
 
     if msa == 'ABMS':
         robust_prediction = make_robust_predictions(
+                                                    streamlined=streamlined,
                                                     algorithm='ABMS',
                                                     lead_time=lead_time,
                                                     test_features=features,
@@ -277,6 +304,7 @@ def msa(
                                                    )
     elif msa == 'MCBA':
         robust_prediction = make_robust_predictions(
+                                                    streamlined=streamlined,
                                                     algorithm='MCBA',
                                                     lead_time=lead_time,
                                                     test_features=features,
@@ -293,16 +321,12 @@ def msa(
                                                     feature_error_means=feature_error_means,
                                                     feature_error_bins=feature_error_bins
                                                    )
-        
-    #test = targets[:, lead_time-1]
 
     if not normalised:
         
         robust_prediction = ((robust_prediction[0] * stdevs[0, -1]) + means[0, -1],
                              (robust_prediction[1] * stdevs[0, -1]) + means[0, -1],
                              (robust_prediction[2] * stdevs[0, -1]) + means[0, -1])
-        #test = (test * stdevs[0, -1]) + means[0, -1]
-        
     
     return robust_prediction
 
@@ -316,7 +340,7 @@ def initialise_evaluation_arrays(features, models):
     UPBO = zeros([len(features)])
     return [ROBO, LOBO, UPBO, NetP, PostIntOutput]
 
-def make_robust_predictions(algorithm, lead_time, test_features, posterior_variable_list, PosteriorVariables, mod_list, prediction_loop_vars, alpha, estimation_strategy, PosteriorSamples=None, GMList=None, mc_samples=None, feature_error_standevs=None, feature_error_bins=None):
+def make_robust_predictions(streamlined, algorithm, lead_time, test_features, posterior_variable_list, PosteriorVariables, mod_list, prediction_loop_vars, alpha, estimation_strategy, PosteriorSamples=None, GMList=None, mc_samples=None, feature_error_standevs=None, feature_error_bins=None):
     
     ROBO = zeros([len(test_features), len(posterior_variable_list)])
     ROBO[:] = nan
@@ -350,18 +374,23 @@ def make_robust_predictions(algorithm, lead_time, test_features, posterior_varia
     PostIntOutput = zeros([sum(idx_real), len(mod_list)])
     
     if algorithm == 'ABMS':
-        """ make ABMS robust predictions using posterior data """
-        print("\n######################################################################")
-        print("\nMake ABMS Robust Prediction Using "+estimation_strategy+" Estimation Strategy")
+        if streamlined == False:
+            """ make ABMS robust predictions using posterior data """
+            print("\n######################################################################")
+            print("\nMake ABMS Robust Prediction Using "+estimation_strategy+" Estimation Strategy")
         
-        ''' make predictions '''
-        print("Making Network Predictions")
-        for i in tqdm(range(0, len(mod_list), 1)):
-            model_set = mod_list[i]
-            PostIntOutput[:, i] = squeeze(model_set.predict(test_features[idx_real,:,:], verbose=0))[:, lead_time-1]
-            
+            ''' make predictions '''
+            print("Making Network Predictions")
+            for i in tqdm(range(0, len(mod_list), 1)):
+                model_set = mod_list[i]
+                PostIntOutput[:, i] = squeeze(model_set.predict(test_features[idx_real,:,:], verbose=0))[:, lead_time-1]
+        else:
+            for i in range(0, len(mod_list), 1):
+                model_set = mod_list[i]
+                PostIntOutput[:, i] = squeeze(model_set.predict(test_features[idx_real,:,:], verbose=0))[:, lead_time-1]            
         for var_count in range(0, len(posterior_variable_list), 1):
-            print(f'\nMaking Averaged Predictions Using {posterior_variable_list[var_count]} Posteriorss')
+            if streamlined == False:
+                print(f'\nMaking Averaged Predictions Using {posterior_variable_list[var_count]} Posteriorss')
             posterior_variable = posterior_variable_list[var_count]
             Variable = DiVariable[var_count]
             if estimation_strategy=='Interpolation':
@@ -407,38 +436,57 @@ def make_robust_predictions(algorithm, lead_time, test_features, posterior_varia
     
     if algorithm == 'MCBA':
         
-        """ make MCBA robust predictions using posterior data """
-        print("\n######################################################################")
-        print("\nMCBA Robust Prediction Using "+estimation_strategy+" Estimation Strategy")
+        if streamlined == False:
+            """ make MCBA robust predictions using posterior data """
+            print("\n######################################################################")
+            print("\nMCBA Robust Prediction Using "+estimation_strategy+" Estimation Strategy")
         
         ''' RESHAPE INPUTS '''
         rep_test_features = repeat(expand_dims(test_features[idx_real,:,:], 0), mc_samples, axis=0)
-        print('\nreshape features to accommodate MC method')
+        if streamlined == False:
+            print('\nreshape features to accommodate MC method')
         stacked_rep_test_features = reshape(rep_test_features, (rep_test_features.shape[0]*rep_test_features.shape[1], rep_test_features.shape[2], rep_test_features.shape[3]), order='F')
         del rep_test_features
         
         '''  GENERATE ERRORS BASED ON FEATURE VALUES AND APPLY TO EACH SAMPLE IN BATCH'''
-        print('\napplying errors to features:')
-        sleep(0.5)
+        if streamlined == False:
+            print('\napplying errors to features:')
+            sleep(0.5)
         cast_standev = zeros([stacked_rep_test_features.shape[0], stacked_rep_test_features.shape[1]])
         cast_standev[:] = nan
-        for m in tqdm(range(0,feature_error_standevs.shape[1],1)):
-           # digitize using error bins
-           bindex = digitize(stacked_rep_test_features[:,:,m], feature_error_bins[:,m], right=False)-1
-           # assign standevs to digitized values
-           for i in range(0, len(feature_error_bins)-1, 1):
-               cast_standev[bindex == i] = feature_error_standevs[i, m]
-           # gen noise using standevs expand_dims(evbest, axis=-1)
-           rn = random.normal(0, cast_standev, [stacked_rep_test_features.shape[0], stacked_rep_test_features.shape[1]]) #repeat(expand_dims(,-1), 49, -1) #[stacked_rep_test_features.shape[0], stacked_rep_test_features.shape[1]]
-           stacked_rep_test_features[:,:,m] += rn
+        if streamlined == False:
+            for m in tqdm(range(0,feature_error_standevs.shape[1],1)):
+               # digitize using error bins
+               bindex = digitize(stacked_rep_test_features[:,:,m], feature_error_bins[:,m], right=False)-1
+               # assign standevs to digitized values
+               for i in range(0, len(feature_error_bins)-1, 1):
+                   cast_standev[bindex == i] = feature_error_standevs[i, m]
+               # gen noise using standevs expand_dims(evbest, axis=-1)
+               rn = random.normal(0, cast_standev, [stacked_rep_test_features.shape[0], stacked_rep_test_features.shape[1]]) #repeat(expand_dims(,-1), 49, -1) #[stacked_rep_test_features.shape[0], stacked_rep_test_features.shape[1]]
+               stacked_rep_test_features[:,:,m] += rn
+        else:
+            for m in range(0,feature_error_standevs.shape[1],1):
+               # digitize using error bins
+               bindex = digitize(stacked_rep_test_features[:,:,m], feature_error_bins[:,m], right=False)-1
+               # assign standevs to digitized values
+               for i in range(0, len(feature_error_bins)-1, 1):
+                   cast_standev[bindex == i] = feature_error_standevs[i, m]
+               # gen noise using standevs expand_dims(evbest, axis=-1)
+               rn = random.normal(0, cast_standev, [stacked_rep_test_features.shape[0], stacked_rep_test_features.shape[1]]) #repeat(expand_dims(,-1), 49, -1) #[stacked_rep_test_features.shape[0], stacked_rep_test_features.shape[1]]
+               stacked_rep_test_features[:,:,m] += rn
         PostIntOutput_MC = repeat(PostIntOutput, mc_samples, axis=0)
         ''' MAKE PREDICTIONS ''' 
-        print('\nMCBA predictions:')                   
-        for i in range(0, len(mod_list), 1):
-            model_set = mod_list[i]
-            print(f'model {i+1} of {len(mod_list)}')
-            sleep(0.5)
-            PostIntOutput_MC[:, i] = squeeze(model_set.predict(stacked_rep_test_features, verbose=1)[:, lead_time-1])
+        if streamlined == False:
+            print('\nMCBA predictions:')                   
+            for i in range(0, len(mod_list), 1):
+                model_set = mod_list[i]
+                print(f'model {i+1} of {len(mod_list)}')
+                sleep(0.5)
+                PostIntOutput_MC[:, i] = squeeze(model_set.predict(stacked_rep_test_features, verbose=1)[:, lead_time-1])
+        else:
+            for i in range(0, len(mod_list), 1):
+                model_set = mod_list[i]
+                PostIntOutput_MC[:, i] = squeeze(model_set.predict(stacked_rep_test_features, verbose=0)[:, lead_time-1])
         
         # remove stacked features to preserve RAM
         del stacked_rep_test_features
@@ -458,8 +506,9 @@ def make_robust_predictions(algorithm, lead_time, test_features, posterior_varia
                 GMMSet = GMList[var_count]
             
             ''' REMAKE LOOP VARIABLE ARRAYS SO THEY ARE THE SAME DIMENSIONS MULTIPLIED BY mc_samples and reshape into input dimensions '''
-            print('\nextending and reshaping likelihood estimate array')
-            sleep(0.5)
+            if streamlined == False:
+                print('\nextending and reshaping likelihood estimate array')
+                sleep(0.5)
             
             for i in range(0, PostIntOutput.shape[1], 1):
                 if (estimation_strategy == 'Interpolation') & (posterior_variable == 'Target'):
@@ -472,15 +521,18 @@ def make_robust_predictions(algorithm, lead_time, test_features, posterior_varia
                     NetP_MC[:, i] = sum(GMMSet[i][0].predict_proba(Variable_MC.reshape(-1,1))*GMMSet[i][0].weights_/GMMSet[i][1], axis=1)
             
             ''' RESHAPE TO ORIGINAL DIMENSIONS '''
-            print('\nreshaping to original dimensions')
-            sleep(0.5)
+            if streamlined == False:
+                print('\nreshaping to original dimensions')
+                sleep(0.5)
             unstacked_NetP_MC = reshape(NetP_MC, (mc_samples, int(NetP_MC.shape[0]/mc_samples), NetP_MC.shape[1]), order='F')
             unstacked_PostIntOutput_MC = reshape(PostIntOutput_MC, (mc_samples, int(PostIntOutput_MC.shape[0]/mc_samples), PostIntOutput_MC.shape[1]), order='F')
             # reduce memory burden
             del PostIntOutput_MC
+            
             ''' REAVERAGE INTO STANDARD OUTPUT FORMAT '''
-            print('\nABMC model averaging')
-            sleep(0.5)
+            if streamlined == False:
+                print('\nABMC model averaging')
+                sleep(0.5)
             
             # sum certainties to 1 over each sample of each observation
             Certainty = sum(unstacked_NetP_MC[:,:], axis=2)
@@ -513,7 +565,7 @@ def make_robust_predictions(algorithm, lead_time, test_features, posterior_varia
         Weighted_UPBO = Weighted_ROBO + (alpha * sqrt(Weighted_VAR))
         Weighted_LOBO = Weighted_ROBO - (alpha * sqrt(Weighted_VAR))
 
-    if (algorithm != 'ABMS') & (algorithm != 'MCBA'):
+    if (algorithm != 'ABMS') & (algorithm != 'MCBA') & (streamlined == False):
         print("please select abms algorithm or abmc alogrithm")
     return (Weighted_LOBO, Weighted_ROBO, Weighted_UPBO)
 

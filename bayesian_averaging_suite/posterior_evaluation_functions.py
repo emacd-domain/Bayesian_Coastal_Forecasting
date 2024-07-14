@@ -12,9 +12,10 @@ from numpy import (zeros, abs, round, percentile, arange,
 
 from tqdm import tqdm
 
-def initialise_posterior_arrays(posttargetgroups, posttargets, models, PosteriorVariables):
-    print("Initialise Variables")
-    sleep(0.5)
+def initialise_posterior_arrays(streamlined, posttargetgroups, posttargets, models, PosteriorVariables):
+    if streamlined == False:
+        print("Initialise Variables")
+        sleep(0.5)
     post_loop_vars=[]
     Mags = unique(posttargetgroups)
     Var = zeros([len(Mags), len(models)])
@@ -33,30 +34,39 @@ def set_closest_value(array1, array2):
     return closest_values
 
 
-def posterior_target_groups(posttargets, variable_name):
+def posterior_target_groups(streamlined, posttargets, variable_name):
     """ function to ro """
-    print("\nSorting Posterior Target Groups for "+variable_name)
-    sleep(0.5)
+    if streamlined == False:
+        print("\nSorting Posterior Target Groups for "+variable_name)
+        sleep(0.5)
     range_percentiles = percentile(posttargets, arange(0,101,2))
     posttargetgrouped = set_closest_value(posttargets, range_percentiles)
     posttargetgroups = unique(posttargetgrouped)
     return posttargetgroups, posttargetgrouped
 
 
-def make_predictions(post_features, mod_list, lead_time):
-    print("\nMaking Predictions for Posterior Calculations")
-    sleep(0.5)
-    pred = zeros([len(post_features), len(mod_list)])
-    count = 0
-    for model_set in tqdm(mod_list):
-        pred[:, count] = squeeze(model_set.predict(post_features, verbose=0)[:, lead_time-1])
-        count += 1
+def make_predictions(streamlined, post_features, mod_list, lead_time):
+    if streamlined == False:
+        print("\nMaking Predictions for Posterior Calculations")
+        sleep(0.5)
+        pred = zeros([len(post_features), len(mod_list)])
+        count = 0
+        for model_set in tqdm(mod_list):
+            pred[:, count] = squeeze(model_set.predict(post_features, verbose=0)[:, lead_time-1])
+            count += 1
+    else:
+        pred = zeros([len(post_features), len(mod_list)])
+        count = 0
+        for model_set in mod_list:
+            pred[:, count] = squeeze(model_set.predict(post_features, verbose=0)[:, lead_time-1])
+            count += 1
     return pred
 
 
-def calculate_posteriors(post_loop_vars, pred, VarSortIndex, posterior_variable, post_targets, mod_list, uniqueidx, idx, variable_name, lead_time):
-    print("Calculating Posterior Probabilities for "+variable_name)
-    sleep(0.5)
+def calculate_posteriors(streamlined, post_loop_vars, pred, VarSortIndex, posterior_variable, post_targets, mod_list, uniqueidx, idx, variable_name, lead_time):
+    if streamlined == False:
+        print("Calculating Posterior Probabilities for "+variable_name)
+        sleep(0.5)
     # split predictions into groups and calculate variance across each group of predictions
 
     # Mags, Var, Likelihood, Pnorm, SquError, RobustOut, PostDist, PosteriorSamples, Pred
@@ -92,10 +102,11 @@ def calculate_posteriors(post_loop_vars, pred, VarSortIndex, posterior_variable,
     return PosteriorSamples
 
 
-def fit_distribution(PosteriorSamples, idx, posterior_variable_list, PosteriorVariables, VarSortIndexes, post_loop_vars, FitType=None, make_plot=False, plot_title=None, plot_prefix=None, plot_directory=None):
+def fit_distribution(streamlined, PosteriorSamples, idx, posterior_variable_list, PosteriorVariables, VarSortIndexes, post_loop_vars, FitType=None, make_plot=False, plot_title=None, plot_prefix=None, plot_directory=None):
     # get distribution packages
-    print('\n###############################################################')
-    print('\nFitting Distribution To Posterior Probabilities')
+    if streamlined == False:
+        print('\n###############################################################')
+        print('\nFitting Distribution To Posterior Probabilities')
     from sklearn.mixture import GaussianMixture
     from numpy import (random, array_split, average,
                        concatenate, argmin, diff, full_like, linspace)
@@ -104,15 +115,106 @@ def fit_distribution(PosteriorSamples, idx, posterior_variable_list, PosteriorVa
         import matplotlib.pyplot as plt
     PostGMList = []
     for i in range(0, len(PosteriorSamples)):
-        print(f'\nOptimizing and Fitting Gaussian Mixture Models For Variable {posterior_variable_list[i]}')
+        if streamlined == False:
+            print(f'\nOptimizing and Fitting Gaussian Mixture Models For Variable {posterior_variable_list[i]}')
         Mags = post_loop_vars[i][0]
         GMList=[]
         Y = PosteriorSamples[i]
         X = PosteriorVariables[i]
         VarSortIndex = VarSortIndexes[i]
         
-        if FitType == 'GaussianMixture':
+        if (FitType == 'GaussianMixture') & (streamlined==False):
             for j in tqdm(range(0, Y.shape[1], 1)):
+                y = Y[:, j].reshape(-1,1)
+                x = X.reshape(-1,1)
+
+                splitx = array_split(x[VarSortIndex], idx)
+                splitx = splitx[1:]
+                splitt = array_split(y[VarSortIndex], idx)
+                splitt = splitt[1:]
+
+                norm_params = zeros([len(Mags),2])
+                norm_gen = []
+                for q in range(0, len(Mags), 1):
+                    yy = asarray(splitt[q].flatten())
+                    xx = asarray(splitx[q].flatten())
+                    weighted_mean = average(xx, weights=yy)
+                    weighted_variance = average((xx - weighted_mean)**2, weights=yy)
+                    norm_params[q, 0] = weighted_mean.copy()
+                    norm_params[q, 1] = sqrt(weighted_variance).copy()
+                    norm_gen.append(random.normal(weighted_mean, sqrt(weighted_variance), 1000))
+                
+                all_data = concatenate([norm_gen], axis=0)
+                all_data = reshape(all_data, [all_data.shape[0]*all_data.shape[1]])
+                xs = linspace(1.1*min(x), 1.1*max(x), 200)
+                
+                n_components = arange(1, 22, 3)
+
+                # Initialize lists to store BIC and AIC values
+                bics = []
+                aics = []
+
+                # Fit GMMs for each number of components and compute BIC/AIC
+                for n in n_components:
+                    gmm = GaussianMixture(n_components=n, random_state=0)
+                    gmm.fit(all_data.reshape(-1,1), y=None)
+                    bics.append(gmm.bic(all_data.reshape(-1,1)))
+                    aics.append(gmm.aic(all_data.reshape(-1,1)))
+                
+                optimal_n_components_bic = n_components[argmin(bics)]
+                
+                # fit optimal mode
+                gmm = GaussianMixture(optimal_n_components_bic, random_state=0)
+                gmm.fit(all_data.reshape(-1,1), y=None)
+                
+                # calculate "bin widths by getting the spacing between model means"
+                best_means = squeeze(gmm.means_.astype(float))
+                order_means = argsort(best_means)
+                reverse_order_means = argsort(order_means)
+                
+                best_means = best_means[order_means]
+                differences = diff(best_means)
+
+                # Create arrays for left and right distances
+                left_distances = full_like(best_means, nan)
+                right_distances = full_like(best_means, nan)
+
+                # Assign differences to left and right arrays
+                left_distances[1:] = differences
+                right_distances[:-1] = differences
+                # make left end equal to right end and vice versa
+                left_distances[0] = right_distances[0]
+                right_distances[-1] = left_distances[-1]
+                distances = (left_distances/2) + (right_distances/2)
+                distances = distances[reverse_order_means]
+                
+                GMList.append([gmm, distances])
+                
+                ms = gmm.predict_proba(xs.reshape(-1,1))
+                mss = sum(ms*gmm.weights_/distances, axis=1)
+                del gmm
+            
+                if make_plot:
+                    plt.rc('font',family='Times New Roman')
+                    fig=plt.figure()
+                    plt.plot(xs, mss)
+                    plt.hist(all_data, density=True, bins=len(Mags)) #
+                    plt.xlabel("x", fontdict={'fontsize' : 18})
+                    plt.ylabel("f(x)", fontdict={'fontsize' : 18})
+                    plt.xticks(size=14)
+                    plt.title(f'GMM of {posterior_variable_list[i]} Posterior Likelihoods \n for Model {j}')
+                    plt.yticks(size=14)
+                    plt.tight_layout()
+                    plt.show()
+                    fname=f"GMM of {posterior_variable_list[i]} Posterior Likelihoods for Model {j}.png"
+                    fig.savefig(plot_directory+'\\'+fname, 
+                               dpi=300, format=None, metadata=None,
+                               bbox_inches=None, pad_inches=0.1,
+                               facecolor='auto', edgecolor='auto',
+                               backend=None
+                               )
+        elif (FitType == 'GaussianMixture') & (streamlined==True):
+            for j in range(0, Y.shape[1], 1):
                 y = Y[:, j].reshape(-1,1)
                 x = X.reshape(-1,1)
 
@@ -205,7 +307,7 @@ def fit_distribution(PosteriorSamples, idx, posterior_variable_list, PosteriorVa
     return PostGMList
 
 
-def posterior_evaluation(post_data=None, posterior_variable_list=['Target'], lead_time=24, mod_list=None, estimation_strategy='Interpolation', 
+def posterior_evaluation(streamlined=False, post_data=None, posterior_variable_list=['Target'], lead_time=24, mod_list=None, estimation_strategy='Interpolation', 
                          make_plot=False, plot_title=None, plot_prefix=None, plot_directory=None):
     if post_data is not None:
         ''' build abms approach from data and estimation strategy '''
@@ -233,10 +335,10 @@ def posterior_evaluation(post_data=None, posterior_variable_list=['Target'], lea
                 if variable == 'Local Pressure':
                     mslp = post_features[:, lead_time-1, 0]
                     PosteriorVariables.append(mslp)
-
-        print("\n######################################################################")
+        if streamlined==False:
+            print("\n######################################################################")
         # make predictions and update post loop variables
-        pred = make_predictions(post_features, mod_list, lead_time)
+        pred = make_predictions(streamlined, post_features, mod_list, lead_time)
 
         PosteriorSamples = []
         VarSortIndexes = []
@@ -245,11 +347,11 @@ def posterior_evaluation(post_data=None, posterior_variable_list=['Target'], lea
             PosteriorVariable = PosteriorVariables[var_count]
             variable_name = posterior_variable_list[var_count]
             # create target groups
-            posttargetgroups, posttargetgrouped = posterior_target_groups(PosteriorVariable, variable_name)
+            posttargetgroups, posttargetgrouped = posterior_target_groups(streamlined, PosteriorVariable, variable_name)
             # sort posterior targets
             VarSortIndex = argsort(PosteriorVariable)
             # post_loop_vars = (Mags, Var, Likelihood, Pnorm, SquError, RobustOut, PostDist, PosteriorSamples)
-            post_loop_vars = initialise_posterior_arrays(posttargetgroups, post_targets, mod_list, PosteriorVariables)
+            post_loop_vars = initialise_posterior_arrays(streamlined, posttargetgroups, post_targets, mod_list, PosteriorVariables)
             ### sort binned targets for varying model weights with magnitude
             VarSort = posttargetgrouped[VarSortIndex]
             ### unique indexes for reconstruction
@@ -257,13 +359,13 @@ def posterior_evaluation(post_data=None, posterior_variable_list=['Target'], lea
             # roll unique values to sort into bins
             idx = where(roll(uniqueidx, 1) != uniqueidx)[0]
             # calculate posterior samples for variable
-            PosteriorVariableSamples = calculate_posteriors(post_loop_vars[var_count], pred, VarSortIndex, PosteriorVariable, post_targets, mod_list, uniqueidx, idx, variable_name, lead_time)
+            PosteriorVariableSamples = calculate_posteriors(streamlined, post_loop_vars[var_count], pred, VarSortIndex, PosteriorVariable, post_targets, mod_list, uniqueidx, idx, variable_name, lead_time)
             # append arrays in loop
             PosteriorSamples.append(PosteriorVariableSamples)
             VarSortIndexes.append(VarSortIndex)
     
     if (estimation_strategy == 'GaussianMixture'):
-        GMList = fit_distribution(PosteriorSamples, idx, posterior_variable_list, PosteriorVariables, VarSortIndexes, post_loop_vars, FitType='GaussianMixture', make_plot=make_plot, plot_title=plot_title, plot_prefix=plot_prefix, plot_directory=plot_directory)
+        GMList = fit_distribution(streamlined, PosteriorSamples, idx, posterior_variable_list, PosteriorVariables, VarSortIndexes, post_loop_vars, FitType='GaussianMixture', make_plot=make_plot, plot_title=plot_title, plot_prefix=plot_prefix, plot_directory=plot_directory)
     elif (estimation_strategy == 'Interpolation'):
         GMList = []
     return GMList, PosteriorSamples, PosteriorVariables
