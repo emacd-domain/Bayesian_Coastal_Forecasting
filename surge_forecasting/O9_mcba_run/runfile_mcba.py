@@ -16,8 +16,8 @@ basuite_path = cwd + r'\..\..\bayesian_averaging_suite'
 sys.path.append(basuite_path)
 
 # import local tools
-from model_selection_algorithms_streamlined import msa
-from posterior_evaluation_functions_streamlined import posterior_evaluation
+from model_selection_algorithms import BMF
+from posterior_evaluation_functions import posterior_evaluation
 from load_save_functions import load_models
 from plots_and_metrics import make_plots, make_metrics
 
@@ -64,26 +64,38 @@ filename = 'GMM_target.pkl'
 # load the model from disk
 GMList = pickle.load(open(filename, 'rb'))
 
-# import error stdevs and thresholds
-pc_error_stds = scipy.io.loadmat(r"..\O8_abmc_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\pc_binned_error.mat")['pc_binned_error']
-pc_error_means = scipy.io.loadmat(r"..\O8_abmc_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\pc_binned_mean.mat")['pc_binned_mean']
-pc_error_thresholds = scipy.io.loadmat(r"..\O8_abmc_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\pc_binned_error_thresholds.mat")['pc_binned_error_thresholds']
-#
-mslp_error_stds = scipy.io.loadmat(r"..\O8_abmc_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\mslp_binned_error.mat")['mslp_binned_error']
-mslp_error_means = scipy.io.loadmat(r"..\O8_abmc_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\mslp_binned_mean.mat")['mslp_binned_mean']
-mslp_error_thresholds = scipy.io.loadmat(r"..\O8_abmc_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\mslp_binned_error_thresholds.mat")['mslp_binned_error_thresholds']
-#
-u10_error_stds = scipy.io.loadmat(r"..\O8_abmc_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\u10_binned_error.mat")['u10_binned_error']
-u10_error_means = scipy.io.loadmat(r"..\O8_abmc_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\u10_binned_mean.mat")['u10_binned_mean']
-u10_error_thresholds = scipy.io.loadmat(r"..\O8_abmc_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\u10_binned_error_thresholds.mat")['u10_binned_error_thresholds']
-#
-v10_error_stds = scipy.io.loadmat(r"..\O8_abmc_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\v10_binned_error.mat")['v10_binned_error']
-v10_error_means = scipy.io.loadmat(r"..\O8_abmc_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\v10_binned_mean.mat")['v10_binned_mean']
-v10_error_thresholds = scipy.io.loadmat(r"..\O8_abmc_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\v10_binned_error_thresholds.mat")['v10_binned_error_thresholds']
+# import nowcast error means and stdevs
+nc_pc_error_stds = scipy.io.loadmat(r"..\O8_mcba_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\pc_nc_binned_error.mat")['pc_nc_binned_error']
+nc_pc_error_means = scipy.io.loadmat(r"..\O8_mcba_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\pc_nc_binned_mean.mat")['pc_nc_binned_mean']
+nc_mslp_error_stds = scipy.io.loadmat(r"..\O8_mcba_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\mslp_nc_binned_error.mat")['mslp_nc_binned_error']
+nc_mslp_error_means = scipy.io.loadmat(r"..\O8_mcba_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\mslp_nc_binned_mean.mat")['mslp_nc_binned_mean']
+nc_u10_error_stds = scipy.io.loadmat(r"..\O8_mcba_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\u10_nc_binned_error.mat")['u10_nc_binned_error']
+nc_u10_error_means = scipy.io.loadmat(r"..\O8_mcba_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\u10_nc_binned_mean.mat")['u10_nc_binned_mean']
+nc_v10_error_stds = scipy.io.loadmat(r"..\O8_mcba_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\v10_nc_binned_error.mat")['v10_nc_binned_error']
+nc_v10_error_means = scipy.io.loadmat(r"..\O8_mcba_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\v10_nc_binned_mean.mat")['v10_nc_binned_mean']
+
+
+# import forecast error means and stdevs
+fc_pc_error_stds = scipy.io.loadmat(r"..\O8_mcba_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\pc_fc_binned_error.mat")['pc_fc_binned_error']
+fc_pc_error_means = scipy.io.loadmat(r"..\O8_mcba_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\pc_fc_binned_mean.mat")['pc_fc_binned_mean']
+fc_mslp_error_stds = scipy.io.loadmat(r"..\O8_mcba_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\mslp_fc_binned_error.mat")['mslp_fc_binned_error']
+fc_mslp_error_means = scipy.io.loadmat(r"..\O8_mcba_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\mslp_fc_binned_mean.mat")['mslp_fc_binned_mean']
+fc_u10_error_stds = scipy.io.loadmat(r"..\O8_mcba_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\u10_fc_binned_error.mat")['u10_fc_binned_error']
+fc_u10_error_means = scipy.io.loadmat(r"..\O8_mcba_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\u10_fc_binned_mean.mat")['u10_fc_binned_mean']
+fc_v10_error_stds = scipy.io.loadmat(r"..\O8_mcba_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\v10_fc_binned_error.mat")['v10_fc_binned_error']
+fc_v10_error_means = scipy.io.loadmat(r"..\O8_mcba_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\v10_fc_binned_mean.mat")['v10_fc_binned_mean']
+
+# import error thresholds
+pc_error_thresholds = scipy.io.loadmat(r"..\O8_mcba_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\pc_nc_binned_error_thresholds.mat")['pc_nc_binned_error_thresholds']
+mslp_error_thresholds = scipy.io.loadmat(r"..\O8_mcba_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\mslp_nc_binned_error_thresholds.mat")['mslp_nc_binned_error_thresholds']
+u10_error_thresholds = scipy.io.loadmat(r"..\O8_mcba_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\u10_nc_binned_error_thresholds.mat")['u10_nc_binned_error_thresholds']
+v10_error_thresholds = scipy.io.loadmat(r"..\O8_mcba_visual_crossing_forecast_variables\O8_4_visual_crossing_pc_bias_correction\v10_nc_binned_error_thresholds.mat")['v10_nc_binned_error_thresholds']
 
 # concatenate errors and thresholds
-bin_error_stdevs = np.concatenate([pc_error_stds, mslp_error_stds.T, u10_error_stds.T, v10_error_stds.T], axis=1)
-bin_error_means = np.concatenate([pc_error_means, mslp_error_means.T, u10_error_means.T, v10_error_means.T], axis=1)
+nc_bin_error_stdevs = np.concatenate([nc_pc_error_stds, nc_mslp_error_stds.T, nc_u10_error_stds.T, nc_v10_error_stds.T], axis=1)
+nc_bin_error_means = np.concatenate([nc_pc_error_means, nc_mslp_error_means.T, nc_u10_error_means.T, nc_v10_error_means.T], axis=1)
+fc_bin_error_stdevs = np.concatenate([fc_pc_error_stds, fc_mslp_error_stds.T, fc_u10_error_stds.T, fc_v10_error_stds.T], axis=1)
+fc_bin_error_means = np.concatenate([fc_pc_error_means, fc_mslp_error_means.T, fc_u10_error_means.T, fc_v10_error_means.T], axis=1)
 bin_thresholds = np.concatenate([pc_error_thresholds, mslp_error_thresholds.T, u10_error_thresholds.T, v10_error_thresholds.T], axis=1)
 
 test_vc = np.concatenate([dm_2021, dm_2022, dm_2023], axis=0)
@@ -106,41 +118,40 @@ test[:] = np.nan
 
 step = 1000
 
-
 # toc = time.time()
 # elapsed_time = round(toc - tic)
 
 for i in range(0, len(features_test) + step, step): #
     print(i)
-    rp, t = msa(
-                  msa=algorithm, 
-                  NNSdirectory=NNSdirectory,
-                  models=mod_list,
-                  workingdirectory=cwd,
-                  features=features_test[i:i+step,:,:],
-                  means=dm_means,
-                  stdevs=dm_stdevs,
-                  alpha=1.282,
-                  lead_time=24,
-                  post_distro=GMList,
-                  post_data=None,
-                  estimation_strategy='GaussianMixture',
-                  posterior_variable_list=['Target'],
-                  targets=targets_test[i:i+step,:],
-                  normalised=False,
-                  mc_samples=100, 
-                  feature_error_standevs=bin_error_stdevs,
-                  feature_error_means=bin_error_means,
-                  feature_error_bins=bin_thresholds
-                )
+    rp = BMF(
+             msa=algorithm,
+             streamlined=False,
+             NNSdirectory=NNSdirectory,
+             models=mod_list,
+             workingdirectory=cwd,
+             features=features_test[i:i+step,:,:],
+             means=dm_means,
+             stdevs=dm_stdevs,
+             alpha=1.96,
+             lead_time=24,
+             post_distro=GMList,
+             post_data=None,
+             estimation_strategy='GaussianMixture',
+             posterior_variable_list=['Target'],
+             normalised=False,
+             mc_samples=100, 
+             feature_error_standevs=(nc_bin_error_stdevs, fc_bin_error_stdevs),
+             feature_error_means=(nc_bin_error_means, fc_bin_error_means),
+             feature_error_bins=bin_thresholds
+            )
     
     lobo[i:i+step] = rp[0]
     robo[i:i+step] = rp[1]
     upbo[i:i+step] = rp[2]
-    test[i:i+step] = t
+    test[i:i+step] = (targets_test[i:i+step, 24] - dm_means[-1]) / dm_stdevs[-1],
 
-robust_prediction = (lobo, robo, upbo)
-robust_save = (lobo, robo, upbo, test)
+#robust_prediction = (lobo, robo, upbo)
+#robust_save = (lobo, robo, upbo, test)
 #np.savetxt('ABMC_output.csv', robust_save, delimiter=',')
 
 #robust_prediction = np.loadtxt('ABMC_output.csv', delimiter=',')
@@ -148,9 +159,9 @@ robust_save = (lobo, robo, upbo, test)
 #make_plots(robust_prediction=robust_prediction, test=test, normalised=False, lead_time=24, msa='MCBA',
 #                plot_title='2021-23 Millport', plot_prefix='FOC_ABMC_', plot_directory=cwd)
 
-make_metrics(robust_prediction=robust_prediction, test=test, normalised=False, 
-              metric_prefix='FOC_ABMC_80_', metric_directory=cwd, thres1=0.75, thres2=1.25, 
-              lead_time=24, msa='ABMC')
+#make_metrics(robust_prediction=robust_prediction, test=test, normalised=False, 
+#              metric_prefix='FOC_ABMC_95_', metric_directory=cwd, thres1=0.75, thres2=1.25, 
+#              lead_time=24, msa='ABMC')
 
 # timeseries = np.arange(0,len(robo),1)
 

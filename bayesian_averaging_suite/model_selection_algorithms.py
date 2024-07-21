@@ -169,7 +169,7 @@ def BMF(
     elif (stdevs is None) & (normalised is False) & (streamlined == True):
         sys.exit()
     elif (stdevs is not None) & (normalised is False) & (streamlined == False):
-        print(f"found standard deviations with dimensions {stdevs.shape}")
+        print(f"found nowcast standard deviations with dimensions {stdevs.shape}")
         sleep(0.5)
 
     # set p-value for confidence interval
@@ -252,7 +252,8 @@ def BMF(
     elif (feature_error_means is None) & (msa == 'MCBA') & (streamlined == True):
         sys.exit()
     elif (feature_error_means is not None) & (msa == 'MCBA') & (streamlined == False):
-        print(f"found feature error means with dimensions {feature_error_means.shape}")
+        print(f"found feature nowcast error means with dimensions {feature_error_means[0].shape}")
+        print(f"found feature forecast error means with dimensions {feature_error_means[1].shape}")
         sleep(0.5)
         
     # check error standard deviations
@@ -263,7 +264,8 @@ def BMF(
     elif (feature_error_standevs is None) & (msa == 'MCBA') & (streamlined == True):
         sys.exit()
     elif (feature_error_standevs is not None) & (msa == 'MCBA') & (streamlined == False):
-        print(f"found feature error standard deviations with dimensions {feature_error_standevs.shape}")
+        print(f"found feature nowcast error standard deviations with dimensions {feature_error_standevs[0].shape}")
+        print(f"found feature forecast error standard deviations with dimensions {feature_error_standevs[1].shape}")
         sleep(0.5)
     
     # check error percentile bins
@@ -340,7 +342,7 @@ def initialise_evaluation_arrays(features, models):
     UPBO = zeros([len(features)])
     return [ROBO, LOBO, UPBO, NetP, PostIntOutput]
 
-def make_robust_predictions(streamlined, algorithm, lead_time, test_features, posterior_variable_list, PosteriorVariables, mod_list, prediction_loop_vars, alpha, estimation_strategy, PosteriorSamples=None, GMList=None, mc_samples=None, feature_error_standevs=None, feature_error_bins=None):
+def make_robust_predictions(streamlined, algorithm, lead_time, test_features, posterior_variable_list, PosteriorVariables, mod_list, prediction_loop_vars, alpha, estimation_strategy, PosteriorSamples=None, GMList=None, mc_samples=None, feature_error_means=None, feature_error_standevs=None, feature_error_bins=None):
     
     ROBO = zeros([len(test_features), len(posterior_variable_list)])
     ROBO[:] = nan
@@ -452,28 +454,46 @@ def make_robust_predictions(streamlined, algorithm, lead_time, test_features, po
         if streamlined == False:
             print('\napplying errors to features:')
             sleep(0.5)
-        cast_standev = zeros([stacked_rep_test_features.shape[0], stacked_rep_test_features.shape[1]])
-        cast_standev[:] = nan
+        cast_nowcast_standev = zeros([stacked_rep_test_features.shape[0], stacked_rep_test_features.shape[1]])
+        cast_nowcast_standev[:] = nan
+        cast_nowcast_means = zeros([stacked_rep_test_features.shape[0], stacked_rep_test_features.shape[1]])
+        cast_nowcast_means[:] = nan
+        cast_forecast_standev = zeros([stacked_rep_test_features.shape[0], stacked_rep_test_features.shape[1]])
+        cast_forecast_standev[:] = nan
+        cast_forecast_means = zeros([stacked_rep_test_features.shape[0], stacked_rep_test_features.shape[1]])
+        cast_forecast_means[:] = nan
         if streamlined == False:
-            for m in tqdm(range(0,feature_error_standevs.shape[1],1)):
+            for m in tqdm(range(0, feature_error_standevs[0].shape[1], 1)):
                # digitize using error bins
                bindex = digitize(stacked_rep_test_features[:,:,m], feature_error_bins[:,m], right=False)-1
                # assign standevs to digitized values
                for i in range(0, len(feature_error_bins)-1, 1):
-                   cast_standev[bindex == i] = feature_error_standevs[i, m]
+                   cast_nowcast_standev[bindex == i] = feature_error_standevs[0][i, m]
+                   cast_nowcast_means[bindex == i] = feature_error_means[0][i, m]
+                   cast_forecast_standev[bindex == i] = feature_error_standevs[1][i, m]
+                   cast_forecast_means[bindex == i] = feature_error_means[1][i, m]
                # gen noise using standevs expand_dims(evbest, axis=-1)
-               rn = random.normal(0, cast_standev, [stacked_rep_test_features.shape[0], stacked_rep_test_features.shape[1]]) #repeat(expand_dims(,-1), 49, -1) #[stacked_rep_test_features.shape[0], stacked_rep_test_features.shape[1]]
-               stacked_rep_test_features[:,:,m] += rn
+               rn = random.normal(cast_nowcast_means, cast_nowcast_standev) #, stacked_rep_test_features.shape[1]]) #repeat(expand_dims(,-1), 49, -1) #[stacked_rep_test_features.shape[0], stacked_rep_test_features.shape[1]]
+               stacked_rep_test_features[:,:25,m] += rn[:,:25]
+               rn = random.normal(cast_forecast_means, cast_forecast_standev) #, repeat(expand_dims(stacked_rep_test_features.shape[0],-1), 24, -1)) #[stacked_rep_test_features.shape[0], stacked_rep_test_features.shape[1]])  #[stacked_rep_test_features.shape[0], stacked_rep_test_features.shape[1]]
+               stacked_rep_test_features[:,25:,m] += rn[:,25:]
+
         else:
-            for m in range(0,feature_error_standevs.shape[1],1):
+            for m in range(0, feature_error_standevs[0].shape[1], 1):
                # digitize using error bins
                bindex = digitize(stacked_rep_test_features[:,:,m], feature_error_bins[:,m], right=False)-1
                # assign standevs to digitized values
                for i in range(0, len(feature_error_bins)-1, 1):
-                   cast_standev[bindex == i] = feature_error_standevs[i, m]
+                   cast_nowcast_standev[bindex == i] = feature_error_standevs[0][i, m]
+                   cast_nowcast_means[bindex == i] = feature_error_means[0][i, m]
+                   cast_forecast_standev[bindex == i] = feature_error_standevs[1][i, m]
+                   cast_forecast_means[bindex == i] = feature_error_means[1][i, m]
                # gen noise using standevs expand_dims(evbest, axis=-1)
-               rn = random.normal(0, cast_standev, [stacked_rep_test_features.shape[0], stacked_rep_test_features.shape[1]]) #repeat(expand_dims(,-1), 49, -1) #[stacked_rep_test_features.shape[0], stacked_rep_test_features.shape[1]]
-               stacked_rep_test_features[:,:,m] += rn
+               rn = random.normal(cast_nowcast_means, cast_nowcast_standev) #, stacked_rep_test_features.shape[1]]) #repeat(expand_dims(,-1), 49, -1) #[stacked_rep_test_features.shape[0], stacked_rep_test_features.shape[1]]
+               stacked_rep_test_features[:,:25,m] += rn[:,:25]
+               rn = random.normal(cast_forecast_means, cast_forecast_standev) #, repeat(expand_dims(stacked_rep_test_features.shape[0],-1), 24, -1)) #[stacked_rep_test_features.shape[0], stacked_rep_test_features.shape[1]])  #[stacked_rep_test_features.shape[0], stacked_rep_test_features.shape[1]]
+               stacked_rep_test_features[:,25:,m] += rn[:,25:]
+               
         PostIntOutput_MC = repeat(PostIntOutput, mc_samples, axis=0)
         ''' MAKE PREDICTIONS ''' 
         if streamlined == False:
@@ -531,7 +551,7 @@ def make_robust_predictions(streamlined, algorithm, lead_time, test_features, po
             
             ''' REAVERAGE INTO STANDARD OUTPUT FORMAT '''
             if streamlined == False:
-                print('\nABMC model averaging')
+                print('\nMCBA model averaging')
                 sleep(0.5)
             
             # sum certainties to 1 over each sample of each observation

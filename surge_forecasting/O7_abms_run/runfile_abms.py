@@ -13,7 +13,7 @@ cwd = os.getcwd()
 basuite_path = cwd+r'\..\..\bayesian_averaging_suite'
 sys.path.append(basuite_path)
 
-from model_selection_algorithms import msa
+from model_selection_algorithms import BMF
 
 # load test data
 norm_dm = scipy.io.loadmat("..\O5_designmatrix\dm_normalised.mat")['dm_normalised']
@@ -36,7 +36,7 @@ del norm_dm
 # set directory
 NNSdirectory = cwd+r'\..\O6_lstm_train\surge_models'
 
-robust_prediction = msa(
+robust_prediction = BMF(
                         msa='ABMS',
                         NNSdirectory=NNSdirectory,
                         workingdirectory=cwd,
