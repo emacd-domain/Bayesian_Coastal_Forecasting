@@ -22,7 +22,7 @@ U10=[];
 V10=[];
 DT=[];
 
-for j=41:length(filenames)
+for j=1:length(filenames)
     cd I:\era-5_wind_1980-2020
     tic
     j
