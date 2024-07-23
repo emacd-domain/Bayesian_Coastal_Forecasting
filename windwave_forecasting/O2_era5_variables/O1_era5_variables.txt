@@ -1,0 +1,7 @@
+Contained herein are the processes for selecting the locations model grid inputs.
+This is done using the following scripts
+
+O1_1_prepare_fetch_points.m
+A script to draw a 1000 km fetch boundary from the north and south boundary to the Irish Sea. Finds points on era5 grid with given
+
+O1_2_grid_point_plot.m 
