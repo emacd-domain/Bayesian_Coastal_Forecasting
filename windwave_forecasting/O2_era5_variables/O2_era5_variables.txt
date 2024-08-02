@@ -1,6 +1,0 @@
-Contained herein are the processes for extracting the U10 and V10 forcings at O1 grid locations.
-This is done using the following scripts
-
-O2_1_era5_ncfileextract_wind.m
-Extract U10 and V10 wind speeds at the grid locations specified in O1 and save them in u10_wind_at_domain_locs and u10_wind_at_domain_locs respectively.
-
