@@ -1,0 +1,7 @@
+Contained herein is the script for training lstm forecasting networks
+
+repnoise.py
+script for balancing the dataset so that the extreme events and non-extreme events are equally balanced
+
+lstm_train.py
+trains lstm forecast networks using the design matrix generated in O5. Output to a surge forecast network directory and individual network performance

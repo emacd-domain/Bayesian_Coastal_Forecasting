@@ -1,0 +1,12 @@
+Contained herein are the processes for selecting the location and lag time of model inputs.
+This is done using the following scripts
+
+.m
+A script to draw a 1000 km fetch boundary from the north and south boundary to the Irish Sea and 
+
+.m 
+A script to determine the lagtime of maximal correlation ebtween the Significant Wave hegiht at Irvine and the bandpassed windspeed magnitude at the locations of interest
+
+.m
+A script to fit a 3D surface to the locations to extract a smooth lag surface across the computational domain
+ 

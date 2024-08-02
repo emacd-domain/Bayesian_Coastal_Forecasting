@@ -1,0 +1,7 @@
+Contained herein are the processes for building the designmatrix for model training and testing using the features of O3 and targets of O4.
+
+O5_1_bandpass_filter.m
+
+O5_2_lag_eval.m
+
+O5_3_designmatrix_builder.m

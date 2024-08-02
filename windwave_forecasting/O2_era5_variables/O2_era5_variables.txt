@@ -1,0 +1,6 @@
+Contained herein are the processes for extracting U10 and V10 wind values from era5 .nc files at the domain locations specified in O1.
+This is done using the following scripts
+
+O2_era5_ncfileextract_wind.m
+Extracts the U10 and V10 values from directory of era5 .nc files at the domain locations and saves to u10_wind_at_domain_locs and v10_wind_at_domain_locs respectively.
+
